@@ -24,23 +24,42 @@ export const extractTextFromImage = async (imageBuffer: Buffer, mimeType: string
   };
 
   // 3. The Prompt locking down the exact JSON schema and rules
-  const prompt = `You are a highly accurate medical data extraction assistant.
-  Your job is to read handwritten veterinary intake forms and extract the data into a strict JSON object.
-  You must return ONLY valid JSON matching this exact structure:
-  {
-    "status": "success",
-    "data": {
-      "owner": { "firstName": "", "lastName": "", "phone": "" },
-      "patient": { "name": "", "species": "", "breed": "", "age_years": 0 },
-      "visitDetails": { "reasonForVisit": "", "currentMedications": [], "allergies": [] }
+  const prompt = `You are an expert veterinary data extraction AI. Analyze this veterinary intake form and extract the information into the EXACT JSON structure below. 
+
+If a field is illegible, empty, or not present on the form, use null or an empty string "". Do not make up information. If the handwriting is very difficult to read, set "flaggedForReview" to true.
+
+RETURN ONLY VALID JSON. NO MARKDOWN. NO BACKTICKS.
+
+{
+  "status": "success",
+  "data": {
+    "owner": {
+      "firstName": "",
+      "lastName": "",
+      "phone": "",
+      "email": "",
+      "address": ""
     },
-    "meta": { "confidenceScore": 0.0, "flaggedForReview": false }
+    "patient": {
+      "name": "",
+      "species": "",
+      "breed": "",
+      "age": "",
+      "sex": "",
+      "spayedNeutered": null,
+      "colorMarkings": ""
+    },
+    "visitDetails": {
+      "reasonForVisit": "",
+      "currentMedications": [],
+      "allergies": [],
+      "previousClinic": ""
+    }
+  },
+  "meta": {
+    "flaggedForReview": false
   }
-  
-  Rules:
-  - If a field is blank or illegible, leave the string empty or the array empty. Do not invent information.
-  - Assess how difficult the handwriting is to read. Set the confidenceScore between 0.0 and 1.0.
-  - If the confidenceScore drops below 0.85, you must set flaggedForReview to true.`;
+}`;
 
   // 4. Send the prompt and the image to Gemini
   const result = await model.generateContent([prompt, imagePart]);
