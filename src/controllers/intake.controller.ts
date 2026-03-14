@@ -18,40 +18,8 @@ export const parseIntakeForm = async (req: Request, res: Response): Promise<void
     // 2. Pass the memory buffer and the file type directly to Gemini
     const extractedData = await extractTextFromImage(req.file.buffer, req.file.mimetype);
 
-    // ==========================================
-    // 🚀 THE INTEGRATION LAYER (PMS SYNC)
-    // ==========================================
-    try {
-      // 👇 Paste your actual Webhook.site URL right here!
-      const pmsWebhookUrl = 'https://webhook.site/d3b1bc3c-7feb-491c-8d81-758a7eb474fd'; 
-      
-      console.log('Forwarding extracted data to Practice Management System...');
-      
-      const syncResponse = await fetch(pmsWebhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          // Eventually: 'Authorization': `Bearer ${clinic.ezyVetToken}`
-        },
-        body: JSON.stringify({
-          source: 'Vet Intake Scanner UI',
-          timestamp: new Date().toISOString(),
-          patientData: extractedData // Fixed: Using your actual variable name!
-        })
-      });
-
-      if (syncResponse.ok) {
-        console.log(`✅ Successfully synced with PMS (Status: ${syncResponse.status})`);
-      } else {
-        console.warn(`⚠️ PMS Sync failed with status: ${syncResponse.status}`);
-      }
-    } catch (syncError) {
-      // Catch the error so if the clinic's PMS goes down, the app doesn't crash
-      console.error('Failed to communicate with PMS:', syncError);
-    }
-    // ==========================================
-
-    // 3. Finally, return the data to the iPad UI as usual
+    // 3. Return the extracted data to the React UI for human review!
+    // (Notice we no longer automatically sync to the PMS here)
     res.status(200).json(extractedData);
       
   } catch (error) {
