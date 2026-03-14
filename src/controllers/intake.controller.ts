@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { extractTextFromImage } from '../services/vision.service'; // <-- Bring in the AI service
+import { extractTextFromImage } from '../services/vision.service'; 
 
 export const parseIntakeForm = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -18,9 +18,42 @@ export const parseIntakeForm = async (req: Request, res: Response): Promise<void
     // 2. Pass the memory buffer and the file type directly to Gemini
     const extractedData = await extractTextFromImage(req.file.buffer, req.file.mimetype);
 
-    // 3. Send the AI's perfectly structured JSON back to the client
-    res.status(200).json(extractedData);
+    // ==========================================
+    // 🚀 THE INTEGRATION LAYER (PMS SYNC)
+    // ==========================================
+    try {
+      // 👇 Paste your actual Webhook.site URL right here!
+      const pmsWebhookUrl = 'https://webhook.site/YOUR-UNIQUE-ID'; 
+      
+      console.log('Forwarding extracted data to Practice Management System...');
+      
+      const syncResponse = await fetch(pmsWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // Eventually: 'Authorization': `Bearer ${clinic.ezyVetToken}`
+        },
+        body: JSON.stringify({
+          source: 'Vet Intake Scanner UI',
+          timestamp: new Date().toISOString(),
+          patientData: extractedData // Fixed: Using your actual variable name!
+        })
+      });
 
+      if (syncResponse.ok) {
+        console.log(`✅ Successfully synced with PMS (Status: ${syncResponse.status})`);
+      } else {
+        console.warn(`⚠️ PMS Sync failed with status: ${syncResponse.status}`);
+      }
+    } catch (syncError) {
+      // Catch the error so if the clinic's PMS goes down, the app doesn't crash
+      console.error('Failed to communicate with PMS:', syncError);
+    }
+    // ==========================================
+
+    // 3. Finally, return the data to the iPad UI as usual
+    res.status(200).json(extractedData);
+      
   } catch (error) {
     console.error('Error in parseIntakeForm:', error);
     res.status(500).json({ 
