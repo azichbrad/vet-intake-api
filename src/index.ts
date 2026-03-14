@@ -1,12 +1,14 @@
 import express, { Request, Response } from 'express';
-import intakeRoutes from './routes/intake.routes'; // <-- ADD THIS IMPORT
+import cors from 'cors'; // <-- 1. Import CORS
+import intakeRoutes from './routes/intake.routes'; 
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// <-- 2. Tell Express to use CORS BEFORE any routes
+app.use(cors()); 
 app.use(express.json());
 
-// --> ADD THIS LINE: Mount the intake routes under the /api/intake path
 app.use('/api/intake', intakeRoutes); 
 
 app.get('/api/health', (req: Request, res: Response) => {
